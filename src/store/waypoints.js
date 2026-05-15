@@ -16,6 +16,7 @@ const waypointsSlice = createSlice({
         lat: payload.lat,
         long: payload.long,
         elev: payload.elev,
+        isProtected: false,
       });
       state.idCounter++;
     },
@@ -36,13 +37,21 @@ const waypointsSlice = createSlice({
         (i) => i.id === action.payload,
       );
       state.dcsWaypoints.splice(index, 1);
+      if (state.dcsWaypoints.length === 0) {
+        state.idCounter = 1;
+      }
     },
     deleteAll(state) {
-      state.dcsWaypoints = [];
-      state.idCounter = 1;
+      state.dcsWaypoints = state.dcsWaypoints.filter((wp) => wp.isProtected);
+      if (state.dcsWaypoints.length === 0) {
+        state.idCounter = 1;
+      }
     },
     deleteLast(state) {
       state.dcsWaypoints.pop();
+      if (state.dcsWaypoints.length === 0) {
+        state.idCounter = 1;
+      }
     },
     changeOrder(state, action) {
       const oldIndex = state.dcsWaypoints.findIndex(
@@ -61,8 +70,21 @@ const waypointsSlice = createSlice({
           lat: waypoint.lat,
           long: waypoint.long,
           elev: waypoint.elev,
+          isProtected: waypoint.isProtected || false,
         });
         state.idCounter++;
+      }
+    },
+    renumber(state) {
+      state.dcsWaypoints.forEach((wp, index) => {
+        wp.name = `Waypoint ${index + 1}`;
+      });
+      state.idCounter = state.dcsWaypoints.length + 1;
+    },
+    toggleProtect(state, action) {
+      const wp = state.dcsWaypoints.find((i) => i.id === action.payload);
+      if (wp) {
+        wp.isProtected = !wp.isProtected;
       }
     },
   },

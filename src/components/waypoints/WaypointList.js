@@ -50,6 +50,10 @@ const WaypointList = () => {
 
   const deleteAllHandler = () => dispatch(waypointsActions.deleteAll());
 
+  const renumberHandler = () => dispatch(waypointsActions.renumber());
+
+  const protectHandler = (id) => dispatch(waypointsActions.toggleProtect(id));
+
   const renameHandler = (event, id) => {
     const name = event.target.value;
     if (name.length > 0) dispatch(waypointsActions.changeName({ id, name }));
@@ -113,6 +117,7 @@ const WaypointList = () => {
                     onElevation={elevationHandler}
                     onDelete={deleteHandler}
                     onExpand={expandHandler}
+                    onProtect={protectHandler}
                   />
                 ))}
 
@@ -143,6 +148,9 @@ const WaypointList = () => {
         </DndContext>
         {hasWaypoints && (
           <Box sx={{ width: "100%", textAlign: "center" }}>
+            <Button variant="text" size="small" onClick={renumberHandler}>
+              Renumber
+            </Button>
             <Button variant="text" size="small" onClick={deleteAllHandler}>
               Clear All
             </Button>

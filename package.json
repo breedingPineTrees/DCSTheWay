@@ -15,7 +15,7 @@
     "react-start": "react-scripts start",
     "react-build": "react-scripts build",
     "electron-dev": "electron .",
-    "dev": "concurrently -k \"npm run start\" \"electron .\"",
+    "dev": "concurrently -k \"npm run react-start\" \"npm run electron-dev\"",
     "electron-build": "electron-builder",
     "package": "npm run react-build && npm run electron-build",
     "test": "jest"

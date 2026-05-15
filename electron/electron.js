@@ -26,7 +26,11 @@ async function createWindow() {
     const options = {
       loadExtensionOptions: { allowFileAccess: true },
     };
-    await installExtension(REDUX_DEVTOOLS, options);
+    try {
+      await installExtension(REDUX_DEVTOOLS, options);
+    } catch (e) {
+      console.warn("Failed to install Redux DevTools:", e);
+    }
     mainWindow.webContents.openDevTools({ mode: "detach" });
   }
   mainWindow.loadURL(

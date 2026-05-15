@@ -44,6 +44,7 @@ const convert = (dcsWaypoints, module) => {
           elev,
           latHem,
           longHem,
+          isProtected: dcsWaypoint.isProtected,
         });
       }
       return waypoints;
@@ -77,6 +78,7 @@ const convert = (dcsWaypoints, module) => {
           elev,
           latHem,
           longHem,
+          isProtected: dcsWaypoint.isProtected,
         });
       }
       return waypoints;
@@ -113,6 +115,7 @@ const convert = (dcsWaypoints, module) => {
           elev,
           latHem,
           longHem,
+          isProtected: dcsWaypoint.isProtected,
         });
       }
       return waypoints;
@@ -152,6 +155,7 @@ const convert = (dcsWaypoints, module) => {
           elev,
           latHem,
           longHem,
+          isProtected: dcsWaypoint.isProtected,
         });
       }
       return waypoints;
@@ -187,6 +191,7 @@ const convert = (dcsWaypoints, module) => {
           elev,
           latHem,
           longHem,
+          isProtected: dcsWaypoint.isProtected,
         });
       }
       return waypoints;
@@ -203,6 +208,7 @@ const convert = (dcsWaypoints, module) => {
           id,
           MGRS,
           elev,
+          isProtected: dcsWaypoint.isProtected,
         });
       }
       return waypoints;

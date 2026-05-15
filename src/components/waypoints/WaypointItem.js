@@ -16,6 +16,8 @@ import {
   ArrowDropDown,
   ArrowDropUp,
   Delete,
+  Lock,
+  LockOpen,
 } from "@mui/icons-material";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -35,6 +37,7 @@ const WaypointItem = ({
   expanded,
   onExpand,
   onElevation,
+  onProtect,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: wp?.id });
@@ -124,6 +127,9 @@ const WaypointItem = ({
                 justifyContent="flex-end"
                 alignItems="center"
               >
+                <IconButton onClick={() => onProtect(wp?.id)}>
+                  {wp?.isProtected ? <Lock fontSize="small" /> : <LockOpen fontSize="small" />}
+                </IconButton>
                 <IconButton onClick={(e) => onDelete(e, wp?.id)}>
                   <Delete />
                 </IconButton>
