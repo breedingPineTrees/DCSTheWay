@@ -150,13 +150,21 @@ function LuaExportAfterNextFrame()
     frameCount = frameCount + 1
     if frameCount == 200 then
         if selfData then
-            log.write("THEWAY", log.INFO, "selfData.Name=" .. tostring(selfData['Name']))
+            local keys = ""
+            for k, v in pairs(selfData) do keys = keys .. tostring(k) .. "(" .. type(v) .. ") " end
+            log.write("THEWAY", log.INFO, "selfData keys: " .. keys)
             log.write("THEWAY", log.INFO, "selfData.Heading=" .. tostring(selfData['Heading']))
             if selfData['LatLongAlt'] then
                 local lla = selfData['LatLongAlt']
                 log.write("THEWAY", log.INFO, "LatLongAlt.Lat=" .. tostring(lla['Lat']) .. " Long=" .. tostring(lla['Long']) .. " Alt=" .. tostring(lla['Alt']))
             else
                 log.write("THEWAY", log.WARNING, "LatLongAlt is nil")
+            end
+            if selfData['Position'] then
+                local p = selfData['Position']
+                log.write("THEWAY", log.INFO, "Position.x=" .. tostring(p['x']) .. " y=" .. tostring(p['y']) .. " z=" .. tostring(p['z']))
+            else
+                log.write("THEWAY", log.WARNING, "Position is nil")
             end
         else
             log.write("THEWAY", log.WARNING, "selfData is nil at frame 200")
@@ -179,6 +187,17 @@ function LuaExportAfterNextFrame()
             if lla['Lat'] and lla['Long'] then
                 message["aircraftLat"] = lla['Lat']
                 message["aircraftLong"] = lla['Long']
+            end
+        end
+        -- fallback: convert world position coords to geo if LatLongAlt unavailable
+        if not message["aircraftLat"] then
+            local pos = selfData['Position']
+            if pos and pos['x'] and pos['z'] then
+                local ok, selfCoords = pcall(LoLoCoordinatesToGeoCoordinates, pos['x'], pos['z'])
+                if ok and selfCoords then
+                    message["aircraftLat"] = selfCoords.latitude
+                    message["aircraftLong"] = selfCoords.longitude
+                end
             end
         end
     end
