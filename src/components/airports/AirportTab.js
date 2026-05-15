@@ -4,6 +4,8 @@ import {
   Divider,
   List,
   ListItemButton,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -24,22 +26,36 @@ const { ipcRenderer } = window.require("electron");
 
 const COALITION_CYCLE = { neutral: "blue", blue: "red", red: "neutral" };
 const COALITION_COLORS = { blue: "#1565c0", red: "#b71c1c", neutral: "#616161" };
-const COALITION_LABELS = { blue: "Friendly", red: "Hostile", neutral: "Neutral" };
+const COALITION_LABELS = { blue: "Bluefor", red: "Redfor", neutral: "Neutral" };
 
 const fmt = (val, digits = 0) =>
   val != null ? Number(val).toFixed(digits) : "---";
 
-const FlightDataRow = ({ label, left, right }) => (
-  <Box sx={{ display: "flex", justifyContent: "space-between", px: 1, py: 0.1 }}>
-    <Typography variant="caption" color="text.secondary" sx={{ width: 32 }}>
+const FlightDataCell = ({ label, value }) => (
+  <Box sx={{ flex: 1, textAlign: "center", px: 0.5 }}>
+    <Typography
+      display="block"
+      variant="caption"
+      color="text.secondary"
+      sx={{ fontSize: "0.6rem", lineHeight: 1.2, userSelect: "none" }}
+    >
       {label}
     </Typography>
-    <Typography variant="caption" sx={{ flex: 1 }}>
-      {left}
+    <Typography
+      display="block"
+      variant="caption"
+      sx={{ fontSize: "0.75rem", fontWeight: 600, lineHeight: 1.3 }}
+    >
+      {value}
     </Typography>
-    <Typography variant="caption" sx={{ flex: 1, textAlign: "right" }}>
-      {right}
-    </Typography>
+  </Box>
+);
+
+const FlightDataRow = ({ left, right }) => (
+  <Box sx={{ display: "flex", py: 0.3 }}>
+    <FlightDataCell {...left} />
+    <Box sx={{ borderLeft: "1px solid", borderColor: "divider" }} />
+    <FlightDataCell {...right} />
   </Box>
 );
 
@@ -48,14 +64,19 @@ const CoalitionDot = ({ coalition, onClick }) => (
     <Box
       onClick={onClick}
       sx={{
-        width: 10,
-        height: 10,
+        width: 18,
+        height: 18,
         borderRadius: "50%",
         bgcolor: COALITION_COLORS[coalition],
+        border: "2px solid",
+        borderColor: `${COALITION_COLORS[coalition]}99`,
+        boxShadow: `0 0 0 1px ${COALITION_COLORS[coalition]}44`,
         cursor: "pointer",
         flexShrink: 0,
         mr: 1,
-        "&:hover": { opacity: 0.75 },
+        "&:hover": { opacity: 0.8, transform: "scale(1.15)" },
+        "&:active": { transform: "scale(0.95)" },
+        transition: "transform 0.1s, opacity 0.1s",
       }}
     />
   </Tooltip>
@@ -91,6 +112,7 @@ const AirportTab = () => {
     }
   }, [rawLat, rawLong]);
   const { coalitions, selectedAirport } = useSelector((state) => state.airports);
+  const [coalitionFilter, setCoalitionFilter] = useState("all");
 
   const theater = detectTheater(posLat, posLong);
   const airports = theater ? AIRPORT_DATA[theater] ?? [] : [];
@@ -117,6 +139,10 @@ const AirportTab = () => {
           : null,
     }))
     .sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity));
+
+  const filtered = coalitionFilter === "all"
+    ? enriched
+    : enriched.filter((ap) => ap.coalition === coalitionFilter);
 
   const selected = enriched.find((ap) => ap.name === selectedAirport);
   const eta =
@@ -146,21 +172,20 @@ const AirportTab = () => {
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column", px: 1 }}>
       {/* Flight data panel */}
-      <Card sx={{ borderRadius: "8px", py: 0.5, mb: 1, flexShrink: 0 }}>
+      <Card sx={{ borderRadius: "8px", pt: 0.5, pb: 0.25, mb: 1, flexShrink: 0 }}>
         <FlightDataRow
-          label="HDG"
-          left={magHdg != null ? `${fmt(magHdg)}°M` : "---"}
-          right={trueHdg != null ? `${fmt(trueHdg)}°T` : "---"}
+          left={{ label: "MAG HDG", value: magHdg != null ? `${fmt(magHdg)}°` : "---" }}
+          right={{ label: "TRUE HDG", value: trueHdg != null ? `${fmt(trueHdg)}°` : "---" }}
         />
+        <Divider />
         <FlightDataRow
-          label="ALT"
-          left={baroFt != null ? `${Math.round(baroFt).toLocaleString()}ft` : "---"}
-          right={aglFt != null ? `${Math.round(Math.max(0, aglFt)).toLocaleString()}ft AGL` : "---"}
+          left={{ label: "BARO ALT", value: baroFt != null ? `${Math.round(baroFt).toLocaleString()} ft` : "---" }}
+          right={{ label: "AGL", value: aglFt != null ? `${Math.round(Math.max(0, aglFt)).toLocaleString()} ft` : "---" }}
         />
+        <Divider />
         <FlightDataRow
-          label="SPD"
-          left={iaKts != null ? `${Math.round(iaKts)}kt IAS` : "---"}
-          right={speedKts != null ? `${Math.round(speedKts)}kt TAS` : "---"}
+          left={{ label: "IAS", value: iaKts != null ? `${Math.round(iaKts)} kt` : "---" }}
+          right={{ label: "TAS", value: speedKts != null ? `${Math.round(speedKts)} kt` : "---" }}
         />
       </Card>
 
@@ -183,7 +208,7 @@ const AirportTab = () => {
             <Typography variant="caption">
               {selected.dist != null ? `${fmt(selected.dist, 1)}nm` : "---"}
               {" · "}
-              {selected.brng != null ? `${fmt(selected.brng)}°` : "---"}
+              {selected.brng != null ? `${fmt(selected.brng)}°T` : "---"}
             </Typography>
           </Box>
           <Typography variant="caption" color="text.secondary">
@@ -198,6 +223,20 @@ const AirportTab = () => {
           </Typography>
         </Card>
       )}
+
+      {/* Coalition filter */}
+      <ToggleButtonGroup
+        value={coalitionFilter}
+        exclusive
+        onChange={(_, val) => { if (val) setCoalitionFilter(val); }}
+        size="small"
+        sx={{ mb: 0.75, flexShrink: 0, width: "100%", "& .MuiToggleButton-root": { flex: 1, py: 0.25, fontSize: "0.6rem", textTransform: "none" } }}
+      >
+        <ToggleButton value="all">All</ToggleButton>
+        <ToggleButton value="blue" sx={{ "&.Mui-selected": { color: COALITION_COLORS.blue, borderColor: COALITION_COLORS.blue, bgcolor: `${COALITION_COLORS.blue}18` } }}>Bluefor</ToggleButton>
+        <ToggleButton value="red" sx={{ "&.Mui-selected": { color: COALITION_COLORS.red, borderColor: COALITION_COLORS.red, bgcolor: `${COALITION_COLORS.red}18` } }}>Redfor</ToggleButton>
+        <ToggleButton value="neutral" sx={{ "&.Mui-selected": { color: COALITION_COLORS.neutral, borderColor: COALITION_COLORS.neutral, bgcolor: `${COALITION_COLORS.neutral}18` } }}>Neutral</ToggleButton>
+      </ToggleButtonGroup>
 
       {/* Airport list */}
       <Card sx={{ borderRadius: "8px", flex: 1, overflow: "hidden" }}>
@@ -216,7 +255,7 @@ const AirportTab = () => {
           </Box>
         ) : (
           <List dense disablePadding sx={{ maxHeight: "100%", overflow: "auto" }}>
-            {enriched.map((ap, i) => (
+            {filtered.map((ap, i) => (
               <Box key={ap.name}>
                 {i > 0 && <Divider />}
                 <ListItemButton
@@ -237,7 +276,7 @@ const AirportTab = () => {
                     sx={{ fontSize: "0.65rem", whiteSpace: "nowrap" }}
                   >
                     {ap.dist != null ? `${fmt(ap.dist, 1)}nm` : "---"}
-                    {ap.brng != null ? ` ${fmt(ap.brng)}°` : ""}
+                    {ap.brng != null ? ` ${fmt(ap.brng)}°T` : ""}
                   </Typography>
                 </ListItemButton>
               </Box>
