@@ -15,7 +15,7 @@ const Banner = (props) => {
               "2px 2px 4px rgba(0, 0, 0, 0.25), -2px -2px 4px rgba(0, 0, 0, 0.25)",
           }}
         >
-          TheWay V{process.env.REACT_APP_VERSION}
+          The Way Home V{process.env.REACT_APP_VERSION}
         </Typography>
         <Typography
           color="lightgrey"

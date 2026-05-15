@@ -1,4 +1,4 @@
-log.write("THEWAY", log.INFO, "Initializing V2.4.2")
+log.write("THEWAY", log.INFO, "Initializing V1.0.0")
 local tcpServer                        = nil
 local udpSpeaker                       = nil
 package.path                           = package.path .. ";" .. lfs.currentdir() .. "/LuaSocket/?.lua"

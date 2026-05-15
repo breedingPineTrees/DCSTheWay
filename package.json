@@ -1,6 +1,8 @@
 {
-  "name": "theway",
-  "version": "2.5.0",
+  "name": "the-way-home",
+  "version": "1.0.0",
+  "description": "DCS World companion app for in-flight navigation and nearest-airport guidance with coalition-aware airport tracking",
+  "author": "breedingPineTrees",
   "private": true,
   "main": "electron/electron.js",
   "dependencies": {
@@ -66,7 +68,7 @@
     "react-test-renderer": "^18.2.0"
   },
   "build": {
-    "productName": "TheWay",
+    "productName": "The Way Home",
     "extends": null,
     "files": [
       "node_modules",
