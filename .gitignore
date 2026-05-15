@@ -25,6 +25,7 @@ yarn-error.log*
 
 .idea
 .vscode/launch.json
+.claude/
 devrun.bat
 language-server-log.txt
 *.bat
