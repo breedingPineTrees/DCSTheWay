@@ -1,4 +1,4 @@
-import { Box, createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import { Box, createTheme, CssBaseline, Tab, Tabs, ThemeProvider } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ModalContainer from "react-modal-promise";
@@ -8,6 +8,7 @@ import WaypointList from "./components/waypoints/WaypointList";
 import theWayTheme from "./theme/TheWayTheme";
 import TransferControls from "./components/TransferControls";
 import TitleBar from "./components/TitleBar";
+import AirportTab from "./components/airports/AirportTab";
 import ConvertModuleWaypoints from "./utils/ConvertModuleWaypoints";
 import GetModuleCommands from "./moduleCommands/GetModuleCommands";
 import askUserAboutSeat from "./moduleCommands/askUserAboutSeat";
@@ -26,6 +27,7 @@ function App() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [inputMethod, setInputMethod] = useState("F10 Map");
   const [isSelecting, setIsSelecting] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const buttonExtraDelay = userPreferences["buttonDelay"] ?? 0;
   const oldCrosshair = userPreferences["oldCrosshair"];
   const dispatch = useDispatch();
@@ -92,28 +94,48 @@ function App() {
       <CssBaseline enableColorScheme />
       <TitleBar openSettingsHandler={() => setSettingsModalOpen(true)} />
       <ModalContainer />
-      <Box sx={{ height: "100vh" }}>
+      <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
         <SettingsDialog
           open={settingsModalOpen}
           closeHandler={() => setSettingsModalOpen(false)}
         />
-        <Box sx={{ height: "25%" }}>
-          <SourceSelector
-            handleSelectionToggle={handleSelectionToggle}
-            module={module}
-            inputMethod={inputMethod}
-            setInputMethod={setInputMethod}
-            isSelecting={isSelecting}
-          />
-        </Box>
-        <Box sx={{ height: "60%", paddingX: 2 }}>
-          <WaypointList />
-        </Box>
-        <Box sx={{ height: "15%" }}>
-          <TransferControls
-            onTransfer={handleTransfer}
-            onSaveFile={handleFileSave}
-          />
+        <Tabs
+          value={activeTab}
+          onChange={(_, v) => setActiveTab(v)}
+          variant="fullWidth"
+          sx={{ minHeight: 36, "& .MuiTab-root": { minHeight: 36, py: 0.5, fontSize: "0.7rem" } }}
+        >
+          <Tab label="Waypoints" />
+          <Tab label="Airports" />
+        </Tabs>
+        <Box sx={{ flex: 1, overflow: "hidden" }}>
+          {activeTab === 0 && (
+            <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+              <Box sx={{ height: "25%" }}>
+                <SourceSelector
+                  handleSelectionToggle={handleSelectionToggle}
+                  module={module}
+                  inputMethod={inputMethod}
+                  setInputMethod={setInputMethod}
+                  isSelecting={isSelecting}
+                />
+              </Box>
+              <Box sx={{ height: "60%", paddingX: 2 }}>
+                <WaypointList />
+              </Box>
+              <Box sx={{ height: "15%" }}>
+                <TransferControls
+                  onTransfer={handleTransfer}
+                  onSaveFile={handleFileSave}
+                />
+              </Box>
+            </Box>
+          )}
+          {activeTab === 1 && (
+            <Box sx={{ height: "100%", pt: 1, pb: 1 }}>
+              <AirportTab />
+            </Box>
+          )}
         </Box>
       </Box>
     </ThemeProvider>

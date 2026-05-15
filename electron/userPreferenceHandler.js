@@ -16,6 +16,9 @@ class userPreferenceHandler {
     ipcMain.on("saveSettingsPreferences", (e, data) => {
       this.#writeSettingsPreferencesFile(data);
     });
+    ipcMain.on("saveAirportCoalitions", (e, data) => {
+      this.store.set("airportCoalitions", data);
+    });
     ipcMain.on("getPreferences", () => {
       this.#readPreferencesFile();
     });

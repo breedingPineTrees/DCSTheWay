@@ -145,6 +145,31 @@ function LuaExportAfterNextFrame()
     message["coords"]["lat"] = tostring(coords.latitude)
     message["coords"]["long"] = tostring(coords.longitude)
     message["elev"] = tostring(elevation)
+
+    if selfData then
+        if selfData['Heading'] then
+            local trueHdg = math.deg(selfData['Heading'])
+            if trueHdg < 0 then trueHdg = trueHdg + 360 end
+            message["trueHdg"] = trueHdg
+        end
+        if selfData['LatLongAlt'] and selfData['LatLongAlt']['Alt'] then
+            message["baroAlt"] = selfData['LatLongAlt']['Alt']
+        end
+    end
+
+    local magOk, magYaw = pcall(LoGetMagneticYaw)
+    if magOk and magYaw then
+        local magHdg = math.deg(magYaw)
+        if magHdg < 0 then magHdg = magHdg + 360 end
+        message["magHdg"] = magHdg
+    end
+
+    local iasOk, ias = pcall(LoGetIndicatedAirSpeed)
+    if iasOk and ias then message["ias"] = ias end
+
+    local tasOk, tas = pcall(LoGetTrueAirSpeed)
+    if tasOk and tas then message["tas"] = tas end
+
     local toSend = JSON:encode(message)
 
     if pcall(function()

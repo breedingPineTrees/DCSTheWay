@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { dcsPointActions } from "../store/dcsPoint";
 import { waypointsActions } from "../store/waypoints";
 import { uiActions } from "../store/ui";
+import { airportsActions } from "../store/airports";
 import { useDispatch, useSelector } from "react-redux";
 import { throttle } from "lodash";
 
@@ -34,6 +35,7 @@ const useElectronIpcListeners = () => {
     });
     ipcRenderer.on("preferencesReceived", (e, preferences) => {
       dispatch(uiActions.setUserPreferences(preferences));
+      dispatch(airportsActions.setAllCoalitions(preferences.airportCoalitions));
     });
     return () => {
       ipcRenderer.removeAllListeners("saveWaypoint");
