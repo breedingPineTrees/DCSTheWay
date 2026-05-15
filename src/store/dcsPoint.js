@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   module: null, lat: null, long: null, elev: null,
+  aircraftLat: null, aircraftLong: null,
   trueHdg: null, magHdg: null, baroAlt: null, ias: null, tas: null,
 };
 
@@ -14,6 +15,8 @@ const dcsPointSlice = createSlice({
       state.lat = Number(action.payload.coords.lat);
       state.long = Number(action.payload.coords.long);
       state.elev = Number(action.payload.elev);
+      state.aircraftLat = action.payload.aircraftLat ?? null;
+      state.aircraftLong = action.payload.aircraftLong ?? null;
       state.trueHdg = action.payload.trueHdg ?? null;
       state.magHdg = action.payload.magHdg ?? null;
       state.baroAlt = action.payload.baroAlt ?? null;

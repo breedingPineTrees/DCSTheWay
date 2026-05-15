@@ -8,6 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useRef, useState } from "react";
 import { airportsActions } from "../../store/airports";
 import {
   bearingDeg,
@@ -62,12 +63,36 @@ const CoalitionDot = ({ coalition, onClick }) => (
 
 const AirportTab = () => {
   const dispatch = useDispatch();
-  const { lat, long, elev, trueHdg, magHdg, baroAlt, ias, tas } = useSelector(
+  const { lat, long, aircraftLat, aircraftLong, elev, trueHdg, magHdg, baroAlt, ias, tas } = useSelector(
     (state) => state.dcsPoint,
   );
+  const rawLat = aircraftLat ?? lat;
+  const rawLong = aircraftLong ?? long;
+
+  // Ignore position jumps > 0.5nm between 100ms updates — filters F10 camera pans.
+  // At Mach 2 an aircraft moves ~0.04nm per update, so 0.5nm is safe headroom.
+  const [posLat, setPosLat] = useState(null);
+  const [posLong, setPosLong] = useState(null);
+  const prevRaw = useRef({ lat: null, long: null });
+  useEffect(() => {
+    if (rawLat == null || rawLong == null) return;
+    const prev = prevRaw.current;
+    if (prev.lat == null) {
+      prevRaw.current = { lat: rawLat, long: rawLong };
+      setPosLat(rawLat);
+      setPosLong(rawLong);
+      return;
+    }
+    const delta = distanceNm(prev.lat, prev.long, rawLat, rawLong);
+    prevRaw.current = { lat: rawLat, long: rawLong };
+    if (delta < 0.5) {
+      setPosLat(rawLat);
+      setPosLong(rawLong);
+    }
+  }, [rawLat, rawLong]);
   const { coalitions, selectedAirport } = useSelector((state) => state.airports);
 
-  const theater = detectTheater(lat, long);
+  const theater = detectTheater(posLat, posLong);
   const airports = theater ? AIRPORT_DATA[theater] ?? [] : [];
 
   const speedKts = tas != null ? msToKnots(tas) : null;
@@ -83,12 +108,12 @@ const AirportTab = () => {
       ...ap,
       coalition: theaterCoalitions[ap.name] ?? "neutral",
       dist:
-        lat != null && long != null
-          ? distanceNm(lat, long, ap.lat, ap.lng)
+        posLat != null && posLong != null
+          ? distanceNm(posLat, posLong, ap.lat, ap.lng)
           : null,
       brng:
-        lat != null && long != null
-          ? bearingDeg(lat, long, ap.lat, ap.lng)
+        posLat != null && posLong != null
+          ? bearingDeg(posLat, posLong, ap.lat, ap.lng)
           : null,
     }))
     .sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity));
@@ -102,9 +127,7 @@ const AirportTab = () => {
   const handleCoalitionClick = (e, ap) => {
     e.stopPropagation();
     const next = COALITION_CYCLE[ap.coalition];
-    dispatch(
-      airportsActions.setCoalition({ theater, name: ap.name, coalition: next }),
-    );
+    dispatch(airportsActions.setCoalition({ theater, name: ap.name, coalition: next }));
     const updated = { ...theaterCoalitions, [ap.name]: next };
     ipcRenderer.send("saveAirportCoalitions", {
       ...coalitions,

@@ -49,6 +49,7 @@ function LuaExportStop()
 end
 
 local data
+local frameCount = 0
 local busy = false;
 local isPressed = false
 local currCommandIndex = 1
@@ -146,14 +147,39 @@ function LuaExportAfterNextFrame()
     message["coords"]["long"] = tostring(coords.longitude)
     message["elev"] = tostring(elevation)
 
+    frameCount = frameCount + 1
+    if frameCount == 200 then
+        if selfData then
+            log.write("THEWAY", log.INFO, "selfData.Name=" .. tostring(selfData['Name']))
+            log.write("THEWAY", log.INFO, "selfData.Heading=" .. tostring(selfData['Heading']))
+            if selfData['LatLongAlt'] then
+                local lla = selfData['LatLongAlt']
+                log.write("THEWAY", log.INFO, "LatLongAlt.Lat=" .. tostring(lla['Lat']) .. " Long=" .. tostring(lla['Long']) .. " Alt=" .. tostring(lla['Alt']))
+            else
+                log.write("THEWAY", log.WARNING, "LatLongAlt is nil")
+            end
+        else
+            log.write("THEWAY", log.WARNING, "selfData is nil at frame 200")
+        end
+        local magOk2, magYaw2 = pcall(LoGetMagneticYaw)
+        log.write("THEWAY", log.INFO, "LoGetMagneticYaw ok=" .. tostring(magOk2) .. " val=" .. tostring(magYaw2))
+        local iasOk2, ias2 = pcall(LoGetIndicatedAirSpeed)
+        log.write("THEWAY", log.INFO, "LoGetIndicatedAirSpeed ok=" .. tostring(iasOk2) .. " val=" .. tostring(ias2))
+    end
+
     if selfData then
         if selfData['Heading'] then
             local trueHdg = math.deg(selfData['Heading'])
             if trueHdg < 0 then trueHdg = trueHdg + 360 end
             message["trueHdg"] = trueHdg
         end
-        if selfData['LatLongAlt'] and selfData['LatLongAlt']['Alt'] then
-            message["baroAlt"] = selfData['LatLongAlt']['Alt']
+        if selfData['LatLongAlt'] then
+            local lla = selfData['LatLongAlt']
+            if lla['Alt'] then message["baroAlt"] = lla['Alt'] end
+            if lla['Lat'] and lla['Long'] then
+                message["aircraftLat"] = lla['Lat']
+                message["aircraftLong"] = lla['Long']
+            end
         end
     end
 

@@ -36,11 +36,14 @@ export function mToFt(m) {
 
 export function detectTheater(lat, lng) {
   if (lat == null || lng == null) return null;
-  if (lat >= 38 && lat <= 48 && lng >= 35 && lng <= 50) return "Caucasus";
-  if (lat >= 22 && lat <= 29 && lng >= 50 && lng <= 63) return "PersianGulf";
+  if (lat >= 38 && lat <= 48 && lng >= 27 && lng <= 50) return "Caucasus";
+  if (lat >= 22 && lat <= 35 && lng >= 48 && lng <= 65) return "PersianGulf";
   if (lat >= 30 && lat <= 38 && lng >= 34 && lng <= 44) return "Syria";
   if (lat >= 34 && lat <= 39 && lng >= -119 && lng <= -113) return "Nevada";
-  if (lat >= -55 && lat <= -49 && lng >= -62 && lng <= -55) return "SouthAtlantic";
   if (lat >= 27 && lat <= 33 && lng >= 30 && lng <= 38) return "Sinai";
+  if (lat >= 13 && lat <= 18 && lng >= 143 && lng <= 150) return "Marianas";
+  if (lat >= 65 && lat <= 72 && lng >= 22 && lng <= 40) return "Kola";
+  if (lat >= 29 && lat <= 38 && lng >= 38 && lng <= 50) return "Iraq";
+  if (lat >= 47 && lat <= 56 && lng >= 6 && lng <= 17) return "GermanyColdWar";
   return null;
 }
