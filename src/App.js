@@ -103,7 +103,7 @@ function App() {
           value={activeTab}
           onChange={(_, v) => setActiveTab(v)}
           variant="fullWidth"
-          sx={{ minHeight: 36, "& .MuiTab-root": { minHeight: 36, py: 0.5, fontSize: "0.7rem" } }}
+          sx={{ minHeight: 36, mt: "40px", "& .MuiTab-root": { minHeight: 36, py: 0.5, fontSize: "0.7rem" } }}
         >
           <Tab label="Waypoints" />
           <Tab label="Airports" />
