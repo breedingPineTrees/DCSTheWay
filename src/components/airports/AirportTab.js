@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   Collapse,
   Divider,
@@ -12,9 +13,11 @@ import {
   Typography,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import LockIcon from "@mui/icons-material/Lock";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import { airportsActions } from "../../store/airports";
+import { waypointsActions } from "../../store/waypoints";
 import {
   bearingDeg,
   detectTheater,
@@ -278,7 +281,7 @@ const AirportTab = () => {
                     </Typography>
                   </ListItemButton>
                   <Collapse in={isSelected} unmountOnExit>
-                    <Box sx={{ px: 2, py: 0.75, bgcolor: "action.selected", display: "flex", gap: 2 }}>
+                    <Box sx={{ px: 2, py: 0.75, bgcolor: "action.selected", display: "flex", gap: 2, alignItems: "center" }}>
                       <Box sx={{ flex: 1 }}>
                         <Typography display="block" variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem" }}>DISTANCE</Typography>
                         <Typography display="block" variant="caption" sx={{ fontWeight: 600 }}>{ap.dist != null ? `${fmt(ap.dist, 1)} nm` : "---"}</Typography>
@@ -293,6 +296,25 @@ const AirportTab = () => {
                           {apEta != null ? (apEta < 1 ? "<1 min" : `~${Math.round(apEta)} min`) : speedKts ? "---" : "no speed"}
                         </Typography>
                       </Box>
+                      <Tooltip title="Add to waypoints list, locked at top" enterDelay={400}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<LockIcon sx={{ fontSize: "0.75rem !important" }} />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(waypointsActions.prependProtectedWaypoint({
+                              lat: ap.lat,
+                              long: ap.lng,
+                              elev: 0,
+                              name: ap.name,
+                            }));
+                          }}
+                          sx={{ fontSize: "0.6rem", py: 0.25, px: 0.75, minWidth: 0, whiteSpace: "nowrap", flexShrink: 0 }}
+                        >
+                          Add WP
+                        </Button>
+                      </Tooltip>
                     </Box>
                     <Divider />
                   </Collapse>

@@ -85,6 +85,18 @@ const waypointsSlice = createSlice({
         wp.isProtected = !wp.isProtected;
       }
     },
+    prependProtectedWaypoint(state, action) {
+      const { lat, long, elev, name } = action.payload;
+      state.dcsWaypoints.unshift({
+        id: state.idCounter,
+        name,
+        lat,
+        long,
+        elev: elev ?? 0,
+        isProtected: true,
+      });
+      state.idCounter++;
+    },
   },
 });
 export const waypointsActions = waypointsSlice.actions;
