@@ -1,6 +1,6 @@
 {
   "name": "the-way-home",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DCS World companion app for in-flight navigation and nearest-airport guidance with coalition-aware airport tracking",
   "author": "breedingPineTrees",
   "private": true,
