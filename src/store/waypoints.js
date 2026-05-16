@@ -43,9 +43,7 @@ const waypointsSlice = createSlice({
     },
     deleteAll(state) {
       state.dcsWaypoints = state.dcsWaypoints.filter((wp) => wp.isProtected);
-      if (state.dcsWaypoints.length === 0) {
-        state.idCounter = 1;
-      }
+      state.idCounter = 1;
     },
     deleteLast(state) {
       state.dcsWaypoints.pop();

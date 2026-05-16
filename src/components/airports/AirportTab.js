@@ -1,7 +1,9 @@
 import {
   Box,
   Card,
+  Collapse,
   Divider,
+  IconButton,
   List,
   ListItemButton,
   ToggleButton,
@@ -9,6 +11,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import { airportsActions } from "../../store/airports";
@@ -26,7 +29,8 @@ const { ipcRenderer } = window.require("electron");
 
 const COALITION_CYCLE = { neutral: "blue", blue: "red", red: "neutral" };
 const COALITION_COLORS = { blue: "#1565c0", red: "#b71c1c", neutral: "#616161" };
-const COALITION_LABELS = { blue: "Bluefor", red: "Redfor", neutral: "Neutral" };
+const COALITION_LABELS = { blue: "BLUEFOR", red: "REDFOR", neutral: "Neutral" };
+const FILTER_LABELS = { all: "All", blue: "BLUEFOR", red: "REDFOR", neutral: "Neutral" };
 
 const fmt = (val, digits = 0) =>
   val != null ? Number(val).toFixed(digits) : "---";
@@ -144,12 +148,6 @@ const AirportTab = () => {
     ? enriched
     : enriched.filter((ap) => ap.coalition === coalitionFilter);
 
-  const selected = enriched.find((ap) => ap.name === selectedAirport);
-  const eta =
-    selected?.dist != null && speedKts
-      ? etaMinutes(selected.dist, speedKts)
-      : null;
-
   const handleCoalitionClick = (e, ap) => {
     e.stopPropagation();
     const next = COALITION_CYCLE[ap.coalition];
@@ -159,6 +157,15 @@ const AirportTab = () => {
       ...coalitions,
       [theater]: updated,
     });
+  };
+
+  const handleClearCoalitions = () => {
+    if (!theater) return;
+    dispatch(airportsActions.clearCoalitions({ theater, coalition: coalitionFilter }));
+    const updatedTheater = coalitionFilter === "all"
+      ? {}
+      : Object.fromEntries(Object.entries(theaterCoalitions).filter(([, c]) => c !== coalitionFilter));
+    ipcRenderer.send("saveAirportCoalitions", { ...coalitions, [theater]: updatedTheater });
   };
 
   const handleSelect = (ap) => {
@@ -198,45 +205,33 @@ const AirportTab = () => {
         {theater ? `Map: ${theater}` : "Map: not detected (fly to detect)"}
       </Typography>
 
-      {/* Selected airport ETA */}
-      {selected && (
-        <Card sx={{ borderRadius: "8px", py: 0.5, px: 1, mb: 1, flexShrink: 0 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="caption" color="primary">
-              <b>{selected.name}</b>
-            </Typography>
-            <Typography variant="caption">
-              {selected.dist != null ? `${fmt(selected.dist, 1)}nm` : "---"}
-              {" · "}
-              {selected.brng != null ? `${fmt(selected.brng)}°T` : "---"}
-            </Typography>
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            ETA:{" "}
-            {eta != null
-              ? eta < 1
-                ? "<1 min"
-                : `~${Math.round(eta)} min`
-              : speedKts
-              ? "---"
-              : "no speed data"}
-          </Typography>
-        </Card>
-      )}
-
-      {/* Coalition filter */}
-      <ToggleButtonGroup
-        value={coalitionFilter}
-        exclusive
-        onChange={(_, val) => { if (val) setCoalitionFilter(val); }}
-        size="small"
-        sx={{ mb: 0.75, flexShrink: 0, width: "100%", "& .MuiToggleButton-root": { flex: 1, py: 0.25, fontSize: "0.6rem", textTransform: "none" } }}
-      >
-        <ToggleButton value="all">All</ToggleButton>
-        <ToggleButton value="blue" sx={{ "&.Mui-selected": { color: COALITION_COLORS.blue, borderColor: COALITION_COLORS.blue, bgcolor: `${COALITION_COLORS.blue}18` } }}>Bluefor</ToggleButton>
-        <ToggleButton value="red" sx={{ "&.Mui-selected": { color: COALITION_COLORS.red, borderColor: COALITION_COLORS.red, bgcolor: `${COALITION_COLORS.red}18` } }}>Redfor</ToggleButton>
-        <ToggleButton value="neutral" sx={{ "&.Mui-selected": { color: COALITION_COLORS.neutral, borderColor: COALITION_COLORS.neutral, bgcolor: `${COALITION_COLORS.neutral}18` } }}>Neutral</ToggleButton>
-      </ToggleButtonGroup>
+      {/* Coalition filter + clear */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.75, flexShrink: 0 }}>
+        <ToggleButtonGroup
+          value={coalitionFilter}
+          exclusive
+          onChange={(_, val) => { if (val) setCoalitionFilter(val); }}
+          size="small"
+          sx={{ flex: 1, "& .MuiToggleButton-root": { flex: 1, py: 0.25, fontSize: "0.6rem", textTransform: "none" } }}
+        >
+          <ToggleButton value="all">All</ToggleButton>
+          <ToggleButton value="blue" sx={{ "&.Mui-selected": { color: COALITION_COLORS.blue, borderColor: COALITION_COLORS.blue, bgcolor: `${COALITION_COLORS.blue}18` } }}>BLUEFOR</ToggleButton>
+          <ToggleButton value="red" sx={{ "&.Mui-selected": { color: COALITION_COLORS.red, borderColor: COALITION_COLORS.red, bgcolor: `${COALITION_COLORS.red}18` } }}>REDFOR</ToggleButton>
+          <ToggleButton value="neutral" sx={{ "&.Mui-selected": { color: COALITION_COLORS.neutral, borderColor: COALITION_COLORS.neutral, bgcolor: `${COALITION_COLORS.neutral}18` } }}>Neutral</ToggleButton>
+        </ToggleButtonGroup>
+        <Tooltip title={`Clear ${FILTER_LABELS[coalitionFilter]} assignments`} enterDelay={400}>
+          <span>
+            <IconButton
+              size="small"
+              onClick={handleClearCoalitions}
+              disabled={!theater}
+              sx={{ border: "1px solid", borderColor: "divider", borderRadius: "4px", p: 0.5 }}
+            >
+              <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Box>
 
       {/* Airport list */}
       <Card sx={{ borderRadius: "8px", flex: 1, overflow: "hidden" }}>
@@ -255,32 +250,55 @@ const AirportTab = () => {
           </Box>
         ) : (
           <List dense disablePadding sx={{ maxHeight: "100%", overflow: "auto" }}>
-            {filtered.map((ap, i) => (
-              <Box key={ap.name}>
-                {i > 0 && <Divider />}
-                <ListItemButton
-                  selected={selectedAirport === ap.name}
-                  onClick={() => handleSelect(ap)}
-                  sx={{ py: 0.4, px: 1 }}
-                >
-                  <CoalitionDot
-                    coalition={ap.coalition}
-                    onClick={(e) => handleCoalitionClick(e, ap)}
-                  />
-                  <Typography variant="caption" sx={{ flex: 1, fontSize: "0.7rem" }}>
-                    {ap.name}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontSize: "0.65rem", whiteSpace: "nowrap" }}
+            {filtered.map((ap, i) => {
+              const isSelected = selectedAirport === ap.name;
+              const apEta = ap.dist != null && speedKts ? etaMinutes(ap.dist, speedKts) : null;
+              return (
+                <Box key={ap.name}>
+                  {i > 0 && <Divider />}
+                  <ListItemButton
+                    selected={isSelected}
+                    onClick={() => handleSelect(ap)}
+                    sx={{ py: 0.4, px: 1 }}
                   >
-                    {ap.dist != null ? `${fmt(ap.dist, 1)}nm` : "---"}
-                    {ap.brng != null ? ` ${fmt(ap.brng)}°T` : ""}
-                  </Typography>
-                </ListItemButton>
-              </Box>
-            ))}
+                    <CoalitionDot
+                      coalition={ap.coalition}
+                      onClick={(e) => handleCoalitionClick(e, ap)}
+                    />
+                    <Typography variant="caption" sx={{ flex: 1, fontSize: "0.7rem" }}>
+                      {ap.name}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: "0.65rem", whiteSpace: "nowrap" }}
+                    >
+                      {ap.dist != null ? `${fmt(ap.dist, 1)}nm` : "---"}
+                      {ap.brng != null ? ` ${fmt(ap.brng)}°T` : ""}
+                    </Typography>
+                  </ListItemButton>
+                  <Collapse in={isSelected} unmountOnExit>
+                    <Box sx={{ px: 2, py: 0.75, bgcolor: "action.selected", display: "flex", gap: 2 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography display="block" variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem" }}>DISTANCE</Typography>
+                        <Typography display="block" variant="caption" sx={{ fontWeight: 600 }}>{ap.dist != null ? `${fmt(ap.dist, 1)} nm` : "---"}</Typography>
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography display="block" variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem" }}>BEARING</Typography>
+                        <Typography display="block" variant="caption" sx={{ fontWeight: 600 }}>{ap.brng != null ? `${fmt(ap.brng)}°T` : "---"}</Typography>
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography display="block" variant="caption" color="text.secondary" sx={{ fontSize: "0.6rem" }}>ETA</Typography>
+                        <Typography display="block" variant="caption" sx={{ fontWeight: 600 }}>
+                          {apEta != null ? (apEta < 1 ? "<1 min" : `~${Math.round(apEta)} min`) : speedKts ? "---" : "no speed"}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Divider />
+                  </Collapse>
+                </Box>
+              );
+            })}
           </List>
         )}
       </Card>
